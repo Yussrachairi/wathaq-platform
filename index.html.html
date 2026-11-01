@@ -1,0 +1,724 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>منصة استدراك وثاق</title>
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- FontAwesome Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Google Fonts: Amiri & Cairo -->
+    <link href="https://fonts.googleapis.com/css2?family=Amiri:ital,wght@0,400;0,700;1,400;1,700&family=Cairo:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+
+    <!-- Firebase SDKs -->
+    <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-database-compat.js"></script>
+
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        wathaq: {
+                            bg: '#f8fafc',
+                            card: '#ffffff',
+                            cardBorder: '#e2e8f0',
+                            darkTeal: '#1b3a42',
+                            teal: '#234a54',
+                            lightTeal: '#3b6f7c',
+                            softBg: '#f1f5f9',
+                            gold: '#b58a28',
+                            goldHover: '#8c6a1c',
+                            goldLight: '#fef9c3',
+                            accentCyan: '#0d9488',
+                        }
+                    },
+                    fontFamily: {
+                        amiri: ['Amiri', 'serif'],
+                        cairo: ['Cairo', 'sans-serif'],
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        body {
+            font-family: 'Cairo', sans-serif;
+            background-color: #f8fafc;
+            color: #1b3a42;
+        }
+        .font-serif-title {
+            font-family: 'Amiri', serif;
+        }
+        ::-webkit-scrollbar {
+            width: 8px;
+            height: 8px;
+        }
+        ::-webkit-scrollbar-track {
+            background: #f1f5f9;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #cbd5e1;
+            border-radius: 4px;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: #94a3b8;
+        }
+        .wathaq-shadow {
+            box-shadow: 0 4px 20px -2px rgba(27, 58, 66, 0.08);
+        }
+    </style>
+</head>
+<body class="min-h-screen flex flex-col justify-between selection:bg-wathaq-darkTeal selection:text-white">
+
+    <!-- Header Section -->
+    <header class="bg-gradient-to-b from-wathaq-darkTeal via-wathaq-teal to-wathaq-darkTeal text-white border-b-4 border-wathaq-gold pt-8 pb-6 px-4 shadow-md relative overflow-hidden">
+        <div class="max-w-7xl mx-auto text-center space-y-3 relative z-10">
+            <div class="inline-flex flex-col items-center justify-center">
+                <div class="w-20 h-20 rounded-full bg-white/10 border-2 border-wathaq-gold flex items-center justify-center shadow-lg mb-2 backdrop-blur-sm">
+                    <span class="font-serif-title text-3xl font-bold text-wathaq-goldLight tracking-widest">وثاق</span>
+                </div>
+                <h1 class="text-3xl sm:text-4xl font-bold font-serif-title text-white tracking-wider">منصة استدراك وثاق</h1>
+                <p class="text-wathaq-goldLight font-serif-title text-base sm:text-lg italic mt-1 font-medium">
+                    «بينَ سَراةِ المصلحينَ شعارُنَا.. للأُمّةِ الغَرّاءِ عقدُنا وِثاقَا»
+                </p>
+            </div>
+            
+            <!-- Connection Status Badge -->
+            <div class="pt-2 flex items-center justify-center gap-2">
+                <span id="syncBadge" class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold bg-emerald-500/20 text-emerald-200 border border-emerald-400/30">
+                    <span class="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
+                    <span>ربط سحابي مشترك نشط</span>
+                </span>
+            </div>
+        </div>
+    </header>
+
+    <!-- Main Content Container -->
+    <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 flex-grow w-full space-y-8">
+
+        <!-- Top 3 Honor Roll -->
+        <section class="bg-gradient-to-r from-amber-500/10 via-wathaq-goldLight to-amber-500/10 border-2 border-wathaq-gold/40 rounded-3xl p-6 wathaq-shadow text-center relative overflow-hidden">
+            <div class="flex items-center justify-center gap-2 mb-4">
+                <i class="fa-solid fa-trophy text-2xl text-wathaq-gold"></i>
+                <h2 class="text-2xl font-bold font-serif-title text-wathaq-darkTeal">لوحة الشرف (أكثر الطالبات إنجازاً بالمقررات)</h2>
+            </div>
+            
+            <div id="honorRollGrid" class="grid grid-cols-1 sm:grid-cols-3 gap-4 max-w-4xl mx-auto">
+                <!-- Dynamically populated top 3 -->
+            </div>
+        </section>
+
+        <!-- Global Stats Bar -->
+        <div class="grid grid-cols-1 sm:grid-cols-3 gap-5">
+            <div class="bg-white border border-wathaq-cardBorder rounded-2xl p-5 text-center wathaq-shadow relative overflow-hidden group hover:border-wathaq-darkTeal transition duration-300">
+                <div class="text-xs font-bold text-slate-500 uppercase tracking-wider mb-1">إجمالي الطالبات</div>
+                <div class="text-3xl font-black text-wathaq-darkTeal" id="stat-total-students">39</div>
+                <div class="text-[11px] text-slate-400 mt-1 font-semibold">طالبة مباركة في المرحلة</div>
+            </div>
+
+            <div class="bg-white border border-wathaq-cardBorder rounded-2xl p-5 text-center wathaq-shadow relative overflow-hidden group hover:border-wathaq-gold transition duration-300">
+                <div class="text-xs font-bold text-wathaq-gold uppercase tracking-wider mb-1">أتممن الهدف الأسبوعي</div>
+                <div class="text-3xl font-black text-wathaq-gold" id="stat-completed-weekly">0</div>
+                <div class="text-[11px] text-amber-600/70 mt-1 font-semibold">طالبة أنجزت هدف الأسبوع</div>
+            </div>
+
+            <div class="bg-white border border-wathaq-cardBorder rounded-2xl p-5 text-center wathaq-shadow relative overflow-hidden group hover:border-wathaq-accentCyan transition duration-300">
+                <div class="text-xs font-bold text-slate-500 uppercase tracking-wider mb-1">متوسط إنجاز الدفعة</div>
+                <div class="text-3xl font-black text-wathaq-accentCyan" id="stat-avg-progress">0%</div>
+                <div class="w-full bg-slate-100 rounded-full h-2 mt-3 overflow-hidden border border-slate-200">
+                    <div id="stat-avg-bar" class="bg-gradient-to-r from-wathaq-accentCyan to-wathaq-gold h-full w-0 transition-all duration-500"></div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Weekly Report Board -->
+        <section class="bg-white border border-wathaq-cardBorder rounded-3xl p-6 wathaq-shadow space-y-4">
+            <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 border-b border-slate-100 pb-4">
+                <div>
+                    <h3 class="text-xl font-bold font-serif-title text-wathaq-darkTeal flex items-center gap-2">
+                        <i class="fa-solid fa-calendar-check text-wathaq-gold"></i>
+                        <span>لائحة الحصر الأسبوعي (كشف يوم الجمعة)</span>
+                    </h3>
+                    <p class="text-xs text-slate-500 mt-1">قائمة مقسمة تلقائياً للطالبات وفقاً لعلامة "تم/لم يتم" للهدف الأسبوعي المحدد</p>
+                </div>
+                <button onclick="toggleWeeklyReportView()" id="toggleReportBtn" class="px-4 py-2 bg-wathaq-darkTeal hover:bg-wathaq-teal text-white rounded-xl text-xs font-bold transition flex items-center gap-2">
+                    <i class="fa-solid fa-list-check"></i>
+                    <span>عرض لائحة الحصر المجمعة</span>
+                </button>
+            </div>
+
+            <div id="weeklyReportContainer" class="hidden grid grid-cols-1 md:grid-cols-2 gap-6 pt-2">
+                <!-- Completed List -->
+                <div class="bg-emerald-50/60 border border-emerald-200 rounded-2xl p-5 space-y-3">
+                    <div class="flex items-center justify-between border-b border-emerald-200 pb-2">
+                        <h4 class="font-bold text-emerald-800 font-serif-title flex items-center gap-2">
+                            <i class="fa-solid fa-circle-check text-emerald-600"></i>
+                            <span>من أتممن الهدف الأسبوعي</span>
+                        </h4>
+                        <span id="weeklyCompletedCountBadge" class="text-xs font-bold bg-emerald-200 text-emerald-800 px-2.5 py-0.5 rounded-full">0</span>
+                    </div>
+                    <ul id="weeklyCompletedList" class="space-y-2 text-xs sm:text-sm text-emerald-950 max-h-60 overflow-y-auto pr-1">
+                        <!-- Injected -->
+                    </ul>
+                </div>
+
+                <!-- Not Completed List -->
+                <div class="bg-rose-50/60 border border-rose-200 rounded-2xl p-5 space-y-3">
+                    <div class="flex items-center justify-between border-b border-rose-200 pb-2">
+                        <h4 class="font-bold text-rose-800 font-serif-title flex items-center gap-2">
+                            <i class="fa-solid fa-circle-xmark text-rose-600"></i>
+                            <span>من لم يتممن الهدف الأسبوعي</span>
+                        </h4>
+                        <span id="weeklyNotCompletedCountBadge" class="text-xs font-bold bg-rose-200 text-rose-800 px-2.5 py-0.5 rounded-full">0</span>
+                    </div>
+                    <ul id="weeklyNotCompletedList" class="space-y-2 text-xs sm:text-sm text-rose-950 max-h-60 overflow-y-auto pr-1">
+                        <!-- Injected -->
+                    </ul>
+                </div>
+            </div>
+        </section>
+
+        <!-- Filter & Search Controls -->
+        <div class="flex flex-col sm:flex-row items-center justify-between gap-4 bg-white border border-wathaq-cardBorder p-4 rounded-2xl wathaq-shadow">
+            <!-- Instant Search Input -->
+            <div class="relative w-full sm:w-96">
+                <i class="fa-solid fa-magnifying-glass absolute right-4 top-1/2 -translate-y-1/2 text-slate-400"></i>
+                <input type="text" id="searchInput" oninput="filterStudents()" placeholder="ابحثي عن اسم الطالبة..." 
+                    class="w-full pr-11 pl-4 py-2.5 rounded-xl border border-slate-200 bg-slate-50 text-wathaq-darkTeal placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-wathaq-darkTeal focus:bg-white text-sm transition">
+            </div>
+
+            <!-- Quick Action Buttons -->
+            <div class="flex items-center gap-2 w-full sm:w-auto justify-end">
+                <button onclick="resetDataConfirmation()" class="px-3.5 py-2.5 bg-red-50 hover:bg-red-100 text-red-600 border border-red-200 rounded-xl text-xs font-bold transition flex items-center gap-2" title="إعادة ضبط كافة البيانات">
+                    <i class="fa-solid fa-rotate-right"></i>
+                    <span>تصفير البيانات</span>
+                </button>
+            </div>
+        </div>
+
+        <!-- Students Grid -->
+        <div id="studentsGrid" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-5">
+            <!-- Dynamic Cards inserted via JavaScript -->
+        </div>
+
+    </main>
+
+    <!-- Footer -->
+    <footer class="bg-wathaq-darkTeal text-white border-t border-wathaq-teal py-6 text-center text-xs space-y-2">
+        <p class="font-serif-title text-sm text-wathaq-goldLight font-bold">«منصة استدراك وثاق»</p>
+        <p class="text-slate-300">&copy; جميع الحقوق محفوظة لرفيقات السراة</p>
+    </footer>
+
+    <!-- MODAL: Student Checklist & Weekly Goal Modal -->
+    <div id="studentModal" class="fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-sm hidden flex items-center justify-center p-4">
+        <div class="bg-white border border-slate-200 rounded-3xl max-w-2xl w-full max-h-[90vh] overflow-hidden shadow-2xl flex flex-col animate-in fade-in zoom-in duration-200">
+            
+            <!-- Modal Header -->
+            <div class="bg-gradient-to-r from-wathaq-darkTeal to-wathaq-teal p-6 text-white flex items-center justify-between border-b border-wathaq-gold/30">
+                <div class="flex items-center gap-4">
+                    <div id="modalTreeIcon" class="w-14 h-14 rounded-2xl bg-white/10 border border-white/20 flex items-center justify-center text-3xl shadow-inner">
+                        🌰
+                    </div>
+                    <div>
+                        <h3 id="modalStudentName" class="text-xl font-bold font-serif-title text-white">اسم الطالبة</h3>
+                        <div class="flex items-center gap-3 text-xs text-slate-200 mt-1">
+                            <span id="modalTreeStageText" class="font-bold text-wathaq-goldLight">بذرة مباركة</span>
+                            <span>•</span>
+                            <span>نسبة الإنجاز الإجمالية: <strong id="modalPercent" class="text-emerald-300 font-bold text-sm">0%</strong></span>
+                        </div>
+                    </div>
+                </div>
+                <button onclick="closeModal()" class="w-9 h-9 rounded-full bg-white/10 hover:bg-white/20 text-white flex items-center justify-center transition">
+                    <i class="fa-solid fa-xmark"></i>
+                </button>
+            </div>
+
+            <!-- Modal Content -->
+            <div class="p-6 space-y-6 overflow-y-auto flex-grow bg-slate-50">
+                
+                <!-- Weekly Goal Box -->
+                <div class="bg-gradient-to-r from-amber-50 to-orange-50 border border-amber-200 rounded-2xl p-4 space-y-3">
+                    <div class="flex items-center justify-between">
+                        <h4 class="font-bold text-amber-900 font-serif-title text-sm flex items-center gap-2">
+                            <i class="fa-solid fa-bullseye text-amber-600"></i>
+                            <span>الهدف الأسبوعي للطالبة</span>
+                        </h4>
+                        <label class="flex items-center gap-2 cursor-pointer bg-white px-3 py-1 rounded-xl border border-amber-200 shadow-sm">
+                            <input type="checkbox" id="modalWeeklyDoneCheckbox" onchange="toggleWeeklyGoalStatus(this.checked)" class="w-4 h-4 text-emerald-600 rounded focus:ring-emerald-500 cursor-pointer">
+                            <span class="text-xs font-bold text-slate-700" id="weeklyStatusText">لم يتم</span>
+                        </label>
+                    </div>
+                    <input type="text" id="modalWeeklyGoalInput" onchange="updateWeeklyGoalText(this.value)" placeholder="اكتبي هدف هذا الأسبوع هنا..." class="w-full text-xs sm:text-sm p-2.5 rounded-xl border border-amber-200 bg-white text-slate-800 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-amber-500">
+                </div>
+
+                <!-- Syllabus Checklist Content -->
+                <div class="space-y-4" id="modalSyllabusContent">
+                    <!-- Syllabus checkboxes dynamically injected -->
+                </div>
+            </div>
+
+            <!-- Modal Footer -->
+            <div class="bg-white p-4 border-t border-slate-200 flex justify-end">
+                <button onclick="closeModal()" class="px-6 py-2.5 bg-wathaq-darkTeal hover:bg-wathaq-teal text-white font-bold text-sm rounded-xl transition shadow-md">
+                    حفظ وإغلاق
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Toast Notification -->
+    <div id="toast" class="fixed bottom-6 left-6 z-50 bg-wathaq-darkTeal text-white border border-wathaq-gold px-5 py-3 rounded-2xl shadow-2xl flex items-center gap-3 text-sm translate-y-20 opacity-0 transition-all duration-300 pointer-events-none">
+        <i class="fa-solid fa-circle-check text-lg text-wathaq-gold"></i>
+        <span id="toastMsg">تم الحفظ بنجاح</span>
+    </div>
+
+    <!-- Application Script with Embedded Firebase Config -->
+    <script>
+        const STUDENT_NAMES = [
+            "أ. ندى أحمد", "آيَـة العامري", "يسرىٰ الشعيري", "أريج علي", "يمنى محمود",
+            "رفيدة مصطفى", "دعاء منير", "هبة زكريا", "سهام خفش", "رحمة أبو الفرج",
+            "بيان عثمان", "رغد إسماعيل", "زينب عزالدين", "دانية أبرص", "هاجر سليمان",
+            "فلسطين موسى", "فاطمة إبراهيم", "هدىٰ مظفر", "نوره محمد", "أسماء غنيم",
+            "إسراء للأقصى", "سليمة نور", "منة الله حسين", "أسماء رُكابي", "حفصة سعدودي",
+            "كاميليا ديداني", "رميساء عبده", "أمينة شمارخة", "هاجر شادي", "مرام قنديل",
+            "فاطمة الزهراء", "رنيم الحضري", "أسمى السيد", "الشيماء مُتيمن", "ليلى الأمين",
+            "روان عاطف", "رضوى حبيب", "ملك الحسين", "نزيهة عبد الغفور"
+        ];
+
+        const COURSES = [
+            {
+                id: 'course1',
+                title: '🎀 المقرر الأول: كتاب فقه تاريخ الفقه',
+                type: 'مجالس التثوير',
+                items: [
+                    'المجلس الأول: المذاهب بين التعلم والتدين',
+                    'المجلس الثاني: مدارسة وفك للمقفلات 1',
+                    'المجلس الثالث: مدارسة وفك للمقفلات 2'
+                ]
+            },
+            {
+                id: 'course2',
+                title: '🎀 المقرر الثاني: كتاب صفة صلاة النبي ﷺ',
+                type: 'مجالس التثوير',
+                items: [
+                    'المجلس الأول: مدارسات 1',
+                    'المجلس الثاني: مدارسات 2',
+                    'المجلس الثالث: مدارسات 3',
+                    'المجلس الرابع: مدارسات 4'
+                ]
+            },
+            {
+                id: 'course3',
+                title: '🎀 المقرر الثالث: جزء من كتاب منحة العلام',
+                type: 'قراءة وسماع',
+                items: [
+                    'إتمام المقرر المحدد كاملاً من كتاب منحة العلام'
+                ]
+            },
+            {
+                id: 'course4',
+                title: '🎀 المقرر الرابع: جزء من كتاب زاد المعاد من هدي خير العباد',
+                type: 'قراءة وسماع',
+                items: [
+                    'إتمام المجمع المقرر كاملاً من كتاب زاد المعاد'
+                ]
+            },
+            {
+                id: 'course5',
+                title: '🎀 مجالس استهداء "مدرسة الصلاة"',
+                type: 'تطلب من المربية',
+                items: [
+                    'المجلس الأول',
+                    'المجلس الثاني',
+                    'المجلس الثالث',
+                    'المجلس الرابع',
+                    'المجلس الخامس'
+                ]
+            },
+            {
+                id: 'course6',
+                title: '🎀 مجالس "تثوير معالم إحياء المنهاج"',
+                type: 'مجالس تثوير',
+                items: [
+                    'المجلس الأول',
+                    'المجلس الثاني',
+                    'المجلس الثالث'
+                ]
+            }
+        ];
+
+        const TOTAL_ITEMS_COUNT = COURSES.reduce((sum, c) => sum + c.items.length, 0);
+
+        let appData = {};
+        let activeStudentIndex = null;
+        let firebaseRef = null;
+
+        // Embedded Firebase Config
+        const FIREBASE_DATABASE_URL = "https://wathaq-platfrom-default-rtdb.firebaseio.com/";
+
+        document.addEventListener('DOMContentLoaded', () => {
+            initFirebaseDirect();
+            renderDashboard();
+            updateGlobalStats();
+            renderHonorRoll();
+            renderWeeklyReports();
+        });
+
+        function generateDefaultData() {
+            const initial = {};
+            STUDENT_NAMES.forEach((name, idx) => {
+                initial[idx] = {
+                    progress: {},
+                    weeklyGoal: "",
+                    weeklyDone: false
+                };
+            });
+            return initial;
+        }
+
+        function initFirebaseDirect() {
+            try {
+                if (!firebase.apps.length) {
+                    firebase.initializeApp({
+                        databaseURL: FIREBASE_DATABASE_URL
+                    });
+                }
+                firebaseRef = firebase.database().ref('wathaq_app_data');
+
+                firebaseRef.on('value', (snapshot) => {
+                    const val = snapshot.val();
+                    if (val) {
+                        appData = val;
+                    } else {
+                        appData = generateDefaultData();
+                        firebaseRef.set(appData);
+                    }
+                    refreshAllUI();
+                });
+            } catch (e) {
+                console.error("Firebase direct connection error", e);
+                // Fallback to LocalStorage if offline
+                const saved = localStorage.getItem('wathaq_istidrak_data_v2');
+                appData = saved ? JSON.parse(saved) : generateDefaultData();
+                refreshAllUI();
+            }
+        }
+
+        function saveData() {
+            if (firebaseRef) {
+                firebaseRef.set(appData);
+            } else {
+                localStorage.setItem('wathaq_istidrak_data_v2', JSON.stringify(appData));
+                refreshAllUI();
+            }
+        }
+
+        function refreshAllUI() {
+            renderDashboard();
+            updateGlobalStats();
+            renderHonorRoll();
+            renderWeeklyReports();
+        }
+
+        function calculateStudentProgress(studentIndex) {
+            const student = appData[studentIndex] || {};
+            const progressMap = student.progress || {};
+            let checkedCount = 0;
+
+            COURSES.forEach(c => {
+                c.items.forEach((_, itemIdx) => {
+                    const key = `${c.id}_${itemIdx}`;
+                    if (progressMap[key]) {
+                        checkedCount++;
+                    }
+                });
+            });
+
+            return Math.round((checkedCount / TOTAL_ITEMS_COUNT) * 100);
+        }
+
+        function getTreeStage(percent) {
+            if (percent === 100) {
+                return { icon: '🌳', label: 'شجرة مثمرة', color: 'text-amber-700', bg: 'bg-amber-50', border: 'border-amber-300' };
+            } else if (percent >= 70) {
+                return { icon: '🌿', label: 'شجرة باسقة', color: 'text-emerald-700', bg: 'bg-emerald-50', border: 'border-emerald-200' };
+            } else if (percent >= 40) {
+                return { icon: '🪴', label: 'شجيرة تورق', color: 'text-teal-700', bg: 'bg-teal-50', border: 'border-teal-200' };
+            } else if (percent >= 10) {
+                return { icon: '🌱', label: 'برعم ينمو', color: 'text-slate-700', bg: 'bg-slate-100', border: 'border-slate-200' };
+            } else {
+                return { icon: '🌰', label: 'بذرة مباركة', color: 'text-slate-500', bg: 'bg-slate-50', border: 'border-slate-200' };
+            }
+        }
+
+        function renderHonorRoll() {
+            const container = document.getElementById('honorRollGrid');
+            container.innerHTML = '';
+
+            const list = STUDENT_NAMES.map((name, idx) => ({
+                index: idx,
+                name: name,
+                progress: calculateStudentProgress(idx)
+            })).sort((a, b) => b.progress - a.progress);
+
+            const top3 = list.slice(0, 3);
+            const badges = [
+                { rank: 'المركز الأول', icon: '👑', border: 'border-amber-400', bg: 'bg-amber-500/10' },
+                { rank: 'المركز الثاني', icon: '🥈', border: 'border-slate-300', bg: 'bg-slate-200/30' },
+                { rank: 'المركز الثالث', icon: '🥉', border: 'border-amber-700/30', bg: 'bg-amber-800/10' }
+            ];
+
+            top3.forEach((item, i) => {
+                const badge = badges[i];
+                const card = document.createElement('div');
+                card.className = `bg-white border-2 ${badge.border} ${badge.bg} rounded-2xl p-4 flex flex-col items-center justify-center space-y-1 shadow-sm`;
+                card.innerHTML = `
+                    <div class="text-2xl">${badge.icon}</div>
+                    <div class="font-bold font-serif-title text-wathaq-darkTeal text-base">${item.name}</div>
+                    <div class="text-xs font-black text-wathaq-gold">${item.progress}% إنجاز المقررات</div>
+                    <div class="text-[10px] text-slate-500 font-bold">${badge.rank}</div>
+                `;
+                container.appendChild(card);
+            });
+        }
+
+        function renderDashboard() {
+            const grid = document.getElementById('studentsGrid');
+            grid.innerHTML = '';
+
+            const query = (document.getElementById('searchInput').value || '').trim().toLowerCase();
+
+            STUDENT_NAMES.forEach((name, idx) => {
+                if (query && !name.toLowerCase().includes(query)) return;
+
+                const percent = calculateStudentProgress(idx);
+                const tree = getTreeStage(percent);
+                const student = appData[idx] || {};
+                const isWeeklyDone = !!student.weeklyDone;
+
+                const card = document.createElement('div');
+                card.className = `bg-white border ${tree.border} rounded-2xl p-5 hover:shadow-lg transition duration-200 cursor-pointer flex flex-col justify-between space-y-4 wathaq-shadow group relative`;
+                card.onclick = () => openStudentModal(idx);
+
+                card.innerHTML = `
+                    <div class="space-y-3">
+                        <div class="flex items-start justify-between gap-2">
+                            <div>
+                                <h3 class="font-bold text-wathaq-darkTeal font-serif-title text-lg group-hover:text-wathaq-gold transition">${name}</h3>
+                                <div class="flex items-center gap-1.5 mt-1 flex-wrap">
+                                    <span class="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[10px] font-bold ${tree.bg} ${tree.color} border border-slate-200/60">
+                                        <span>${tree.icon}</span>
+                                        <span>${tree.label}</span>
+                                    </span>
+                                    <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold ${isWeeklyDone ? 'bg-emerald-100 text-emerald-800 border-emerald-200' : 'bg-slate-100 text-slate-500'} border">
+                                        <i class="fa-solid ${isWeeklyDone ? 'fa-check text-emerald-600' : 'fa-minus'}"></i>
+                                        <span>${isWeeklyDone ? 'أتمت الهدف الأسبوعي' : 'لم تُتم الهدف'}</span>
+                                    </span>
+                                </div>
+                            </div>
+                            <div class="w-11 h-11 rounded-xl bg-slate-50 border border-slate-200 flex items-center justify-center text-2xl flex-shrink-0 shadow-sm">
+                                ${tree.icon}
+                            </div>
+                        </div>
+
+                        <div class="space-y-1.5">
+                            <div class="flex justify-between text-xs font-bold">
+                                <span class="text-slate-500">نسبة المقررات</span>
+                                <span class="${percent === 100 ? 'text-amber-600 font-extrabold' : 'text-wathaq-darkTeal'}">${percent}%</span>
+                            </div>
+                            <div class="w-full bg-slate-100 rounded-full h-2 overflow-hidden border border-slate-200/80">
+                                <div class="bg-gradient-to-r from-wathaq-darkTeal via-wathaq-lightTeal to-wathaq-gold h-2 rounded-full transition-all duration-300" style="width: ${percent}%"></div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <button class="w-full py-2 bg-slate-50 group-hover:bg-wathaq-darkTeal group-hover:text-white text-wathaq-darkTeal text-xs font-bold rounded-xl border border-slate-200 transition flex items-center justify-center gap-2">
+                        <i class="fa-solid fa-clipboard-check"></i>
+                        <span>عرض ومتابعة المقررات والهدف</span>
+                    </button>
+                `;
+
+                grid.appendChild(card);
+            });
+        }
+
+        function renderWeeklyReports() {
+            const compList = document.getElementById('weeklyCompletedList');
+            const notCompList = document.getElementById('weeklyNotCompletedList');
+            compList.innerHTML = '';
+            notCompList.innerHTML = '';
+
+            let compCount = 0;
+            let notCompCount = 0;
+
+            STUDENT_NAMES.forEach((name, idx) => {
+                const student = appData[idx] || {};
+                const isDone = !!student.weeklyDone;
+                const goalText = student.weeklyGoal || "لم يُحدد هدف";
+
+                const li = document.createElement('li');
+                li.className = "flex items-center justify-between p-2 rounded-xl bg-white border border-slate-100 shadow-sm";
+
+                if (isDone) {
+                    compCount++;
+                    li.innerHTML = `
+                        <span class="font-bold font-serif-title">${name}</span>
+                        <span class="text-[11px] text-emerald-700 bg-emerald-100/60 px-2 py-0.5 rounded-lg border border-emerald-200/50">${goalText}</span>
+                    `;
+                    compList.appendChild(li);
+                } else {
+                    notCompCount++;
+                    li.innerHTML = `
+                        <span class="font-bold font-serif-title text-rose-900">${name}</span>
+                        <span class="text-[11px] text-rose-700 bg-rose-100/60 px-2 py-0.5 rounded-lg border border-rose-200/50">${goalText}</span>
+                    `;
+                    notCompList.appendChild(li);
+                }
+            });
+
+            document.getElementById('weeklyCompletedCountBadge').innerText = compCount;
+            document.getElementById('weeklyNotCompletedCountBadge').innerText = notCompCount;
+            document.getElementById('stat-completed-weekly').innerText = compCount;
+        }
+
+        function toggleWeeklyReportView() {
+            const container = document.getElementById('weeklyReportContainer');
+            container.classList.toggle('hidden');
+        }
+
+        function filterStudents() {
+            renderDashboard();
+        }
+
+        function updateGlobalStats() {
+            let totalPctSum = 0;
+
+            STUDENT_NAMES.forEach((_, idx) => {
+                totalPctSum += calculateStudentProgress(idx);
+            });
+
+            const avgPct = Math.round(totalPctSum / STUDENT_NAMES.length);
+
+            document.getElementById('stat-avg-progress').innerText = `${avgPct}%`;
+            document.getElementById('stat-avg-bar').style.width = `${avgPct}%`;
+        }
+
+        function openStudentModal(index) {
+            const name = STUDENT_NAMES[index];
+            const confirmOpen = confirm(`هل أنتِ متأكدة من فتح بطاقة الطالبة: (${name}) لتعديل أهدافها ومقرراتها؟`);
+            if (!confirmOpen) return;
+
+            activeStudentIndex = index;
+            const percent = calculateStudentProgress(index);
+            const tree = getTreeStage(percent);
+            const student = appData[index] || { progress: {}, weeklyGoal: "", weeklyDone: false };
+
+            document.getElementById('modalStudentName').innerText = name;
+            document.getElementById('modalPercent').innerText = `${percent}%`;
+            document.getElementById('modalTreeIcon').innerText = tree.icon;
+            document.getElementById('modalTreeStageText').innerText = tree.label;
+
+            document.getElementById('modalWeeklyGoalInput').value = student.weeklyGoal || "";
+            document.getElementById('modalWeeklyDoneCheckbox').checked = !!student.weeklyDone;
+            document.getElementById('weeklyStatusText').innerText = student.weeklyDone ? "تم الأداء" : "لم يتم";
+
+            const container = document.getElementById('modalSyllabusContent');
+            container.innerHTML = '';
+
+            const progressMap = student.progress || {};
+
+            COURSES.forEach(course => {
+                const courseBox = document.createElement('div');
+                courseBox.className = 'bg-white border border-slate-200 rounded-2xl p-4 space-y-3 shadow-sm';
+
+                let itemsHTML = '';
+                course.items.forEach((itemText, itemIdx) => {
+                    const key = `${course.id}_${itemIdx}`;
+                    const isChecked = !!progressMap[key];
+
+                    itemsHTML += `
+                        <label class="flex items-start gap-3 p-2.5 rounded-xl bg-slate-50 hover:bg-slate-100 border border-slate-200/70 transition cursor-pointer">
+                            <input type="checkbox" 
+                                ${isChecked ? 'checked' : ''} 
+                                onchange="toggleItemCheck(${index}, '${key}', this.checked)"
+                                class="mt-1 w-4 h-4 text-wathaq-darkTeal bg-white border-slate-300 rounded focus:ring-wathaq-darkTeal cursor-pointer">
+                            <span class="text-xs sm:text-sm text-slate-800 font-semibold ${isChecked ? 'line-through text-slate-400' : ''}">
+                                ${itemText}
+                            </span>
+                        </label>
+                    `;
+                });
+
+                courseBox.innerHTML = `
+                    <div class="flex items-center justify-between border-b border-slate-100 pb-2">
+                        <h4 class="font-bold text-wathaq-darkTeal text-sm font-serif-title">${course.title}</h4>
+                        <span class="text-[10px] bg-slate-100 px-2 py-0.5 rounded text-slate-600 font-bold border border-slate-200">${course.type}</span>
+                    </div>
+                    <div class="space-y-1.5 pt-1">
+                        ${itemsHTML}
+                    </div>
+                `;
+
+                container.appendChild(courseBox);
+            });
+
+            document.getElementById('studentModal').classList.remove('hidden');
+        }
+
+        function toggleWeeklyGoalStatus(isDone) {
+            if (activeStudentIndex === null) return;
+            if (!appData[activeStudentIndex]) appData[activeStudentIndex] = {};
+            appData[activeStudentIndex].weeklyDone = isDone;
+            document.getElementById('weeklyStatusText').innerText = isDone ? "تم الأداء" : "لم يتم";
+            saveData();
+        }
+
+        function updateWeeklyGoalText(val) {
+            if (activeStudentIndex === null) return;
+            if (!appData[activeStudentIndex]) appData[activeStudentIndex] = {};
+            appData[activeStudentIndex].weeklyGoal = val;
+            saveData();
+        }
+
+        function toggleItemCheck(studentIdx, key, isChecked) {
+            if (!appData[studentIdx]) appData[studentIdx] = {};
+            if (!appData[studentIdx].progress) appData[studentIdx].progress = {};
+            
+            appData[studentIdx].progress[key] = isChecked;
+
+            saveData();
+
+            const percent = calculateStudentProgress(studentIdx);
+            const tree = getTreeStage(percent);
+            document.getElementById('modalPercent').innerText = `${percent}%`;
+            document.getElementById('modalTreeIcon').innerText = tree.icon;
+            document.getElementById('modalTreeStageText').innerText = tree.label;
+        }
+
+        function closeModal() {
+            document.getElementById('studentModal').classList.add('hidden');
+            activeStudentIndex = null;
+            showToast('تم حفظ تحديث الإنجاز بنجاح');
+        }
+
+        function resetDataConfirmation() {
+            if (confirm('هل أنتِ مطمئنة لرغبتكِ في تصفير جميع البيانات والاهداف لجميع الطالبات؟')) {
+                appData = generateDefaultData();
+                saveData();
+                showToast('تم تصفير البيانات بنجاح');
+            }
+        }
+
+        function showToast(msg) {
+            const toast = document.getElementById('toast');
+            document.getElementById('toastMsg').innerText = msg;
+            toast.classList.remove('translate-y-20', 'opacity-0');
+            setTimeout(() => {
+                toast.classList.add('translate-y-20', 'opacity-0');
+            }, 3000);
+        }
+    </script>
+</body>
+</html>
