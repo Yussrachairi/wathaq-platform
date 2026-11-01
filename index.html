@@ -718,14 +718,6 @@
             showToast('تم حفظ تحديث الإنجاز بنجاح');
         }
 
-        function resetDataConfirmation() {
-            if (confirm('هل أنتِ مطمئنة لرغبتكِ في تصفير جميع البيانات والاهداف لجميع الطالبات؟')) {
-                appData = generateDefaultData();
-                saveData();
-                showToast('تم تصفير البيانات بنجاح');
-            }
-        }
-
         function showToast(msg) {
             const toast = document.getElementById('toast');
             document.getElementById('toastMsg').innerText = msg;
