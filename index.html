@@ -637,69 +637,81 @@
             document.getElementById('stat-avg-bar').style.width = `${avgPct}%`;
         }
 
-        function openStudentModal(index) {
-            activeStudentIndex = index;
-            const name = STUDENT_NAMES[index];
-            const student = appData[index] || { progress: {}, weeklyGoal: "", weeklyDone: false };
+        let pendingStudentIndex = null;
 
-            document.getElementById('modalStudentName').innerText = name;
-            
-            const percent = calculateStudentProgress(index);
-            const tree = getTreeStage(percent);
-            
-            document.getElementById('modalTreeIcon').innerText = tree.icon;
-            document.getElementById('modalTreeStageText').innerText = tree.label;
-            document.getElementById('modalPercent').innerText = `${percent}%`;
+function openStudentModal(index) {
+    pendingStudentIndex = index;
+    const name = STUDENT_NAMES[index];
+    
+    // تحديث نص رسالة التأكيد المنبثقة بالاسم المحدد
+    document.getElementById('confirmStudentText').innerText = `هل أنتِ الطالبة (${name})؟`;
+    document.getElementById('studentConfirmModal').classList.remove('hidden');
+}
 
-            const goalInput = document.getElementById('modalWeeklyGoalInput');
-            goalInput.value = student.weeklyGoal || "";
+function confirmAndOpenStudentModal() {
+    if (pendingStudentIndex === null) return;
+    const index = pendingStudentIndex;
+    closeConfirmModal();
 
-            const checkbox = document.getElementById('modalWeeklyDoneCheckbox');
-            checkbox.checked = !!student.weeklyDone;
-            
-            const statusText = document.getElementById('weeklyStatusText');
-            statusText.innerText = student.weeklyDone ? "أتمت الهدف" : "لم يتم";
-            statusText.className = student.weeklyDone ? "text-xs font-bold text-emerald-700" : "text-xs font-bold text-slate-700";
+    activeStudentIndex = index;
+    const name = STUDENT_NAMES[index];
+    const student = appData[index] || { progress: {}, weeklyGoal: "", weeklyDone: false };
 
-            const container = document.getElementById('modalSyllabusContent');
-            container.innerHTML = '';
+    document.getElementById('modalStudentName').innerText = name;
+    
+    const percent = calculateStudentProgress(index);
+    const tree = getTreeStage(percent);
+    
+    document.getElementById('modalTreeIcon').innerText = tree.icon;
+    document.getElementById('modalTreeStageText').innerText = tree.label;
+    document.getElementById('modalPercent').innerText = `${percent}%`;
 
-            COURSES.forEach(c => {
-                const section = document.createElement('div');
-                section.className = "bg-white border border-slate-200 rounded-2xl p-4 space-y-3 shadow-sm";
-                
-                let html = `
-                    <div class="flex items-center justify-between border-b border-slate-100 pb-2">
-                        <h5 class="font-bold font-serif-title text-wathaq-darkTeal text-sm">${c.title}</h5>
-                        <span class="text-[10px] font-bold bg-slate-100 text-slate-600 px-2 py-0.5 rounded-md">${c.type}</span>
-                    </div>
-                    <div class="space-y-2">
-                `;
+    document.getElementById('modalWeeklyGoalInput').value = student.weeklyGoal || "";
+    document.getElementById('modalWeeklyDoneCheckbox').checked = !!student.weeklyDone;
+    
+    const statusText = document.getElementById('weeklyStatusText');
+    statusText.innerText = student.weeklyDone ? "أتمت الهدف" : "لم يتم";
+    statusText.className = student.weeklyDone ? "text-xs font-bold text-emerald-700" : "text-xs font-bold text-slate-700";
 
-                c.items.forEach((itemText, itemIdx) => {
-                    const key = `${c.id}_${itemIdx}`;
-                    const isChecked = !!(student.progress && student.progress[key]);
+    const container = document.getElementById('modalSyllabusContent');
+    container.innerHTML = '';
 
-                    html += `
-                        <label class="flex items-center gap-3 p-2 rounded-xl hover:bg-slate-50 cursor-pointer transition border border-transparent hover:border-slate-100">
-                            <input type="checkbox" ${isChecked ? 'checked' : ''} onchange="toggleCourseItem('${c.id}', ${itemIdx}, this.checked)" class="w-4 h-4 text-wathaq-darkTeal rounded focus:ring-wathaq-darkTeal cursor-pointer">
-                            <span class="text-xs sm:text-sm text-slate-700 ${isChecked ? 'line-through text-slate-400 font-medium' : ''}">${itemText}</span>
-                        </label>
-                    `;
-                });
+    COURSES.forEach(c => {
+        const section = document.createElement('div');
+        section.className = "bg-white border border-slate-200 rounded-2xl p-4 space-y-3 shadow-sm";
+        
+        let html = `
+            <div class="flex items-center justify-between border-b border-slate-100 pb-2">
+                <h5 class="font-bold font-serif-title text-wathaq-darkTeal text-sm">${c.title}</h5>
+                <span class="text-[10px] font-bold bg-slate-100 text-slate-600 px-2 py-0.5 rounded-md">${c.type}</span>
+            </div>
+            <div class="space-y-2">
+        `;
 
-                html += `</div>`;
-                section.innerHTML = html;
-                container.appendChild(section);
-            });
+        c.items.forEach((itemText, itemIdx) => {
+            const key = `${c.id}_${itemIdx}`;
+            const isChecked = !!(student.progress && student.progress[key]);
 
-            document.getElementById('studentModal').classList.remove('hidden');
-        }
+            html += `
+                <label class="flex items-center gap-3 p-2 rounded-xl hover:bg-slate-50 cursor-pointer transition border border-transparent hover:border-slate-100">
+                    <input type="checkbox" ${isChecked ? 'checked' : ''} onchange="toggleCourseItem('${c.id}', ${itemIdx}, this.checked)" class="w-4 h-4 text-wathaq-darkTeal rounded focus:ring-wathaq-darkTeal cursor-pointer">
+                    <span class="text-xs sm:text-sm text-slate-700 ${isChecked ? 'line-through text-slate-400 font-medium' : ''}">${itemText}</span>
+                </label>
+            `;
+        });
 
-        function closeModal() {
-            document.getElementById('studentModal').classList.add('hidden');
-            activeStudentIndex = null;
-        }
+        html += `</div>`;
+        section.innerHTML = html;
+        container.appendChild(section);
+    });
+
+    document.getElementById('studentModal').classList.remove('hidden');
+}
+
+function closeConfirmModal() {
+    document.getElementById('studentConfirmModal').classList.add('hidden');
+    pendingStudentIndex = null;
+}
 
         function toggleCourseItem(courseId, itemIdx, isChecked) {
             if (activeStudentIndex === null) return;
@@ -758,5 +770,29 @@
             }, 2500);
         }
     </script>
+
+    <!-- نافذة تأكيد هوية الطالبة (ضعيها هنا) -->
+    <div id="studentConfirmModal" class="fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-sm hidden flex items-center justify-center p-4">
+        <div class="bg-white border border-slate-200 rounded-3xl max-w-sm w-full p-6 shadow-2xl text-center space-y-4">
+            <div class="w-14 h-14 rounded-full bg-amber-100 text-amber-700 flex items-center justify-center mx-auto text-2xl font-bold">
+                <i class="fa-solid fa-user-shield"></i>
+            </div>
+            <h3 id="confirmStudentText" class="font-bold text-slate-800 text-base">
+                هل أنتِ الطالبة؟
+            </h3>
+            <p class="text-xs text-slate-500">
+                الرجاء التأكد من اختيار اسمكِ الصحيح قبل تعديل المقررات والهدف الأسبوعي.
+            </p>
+            <div class="flex items-center justify-center gap-3 pt-2">
+                <button onclick="closeConfirmModal()" class="px-4 py-2 rounded-xl border border-slate-200 text-slate-600 text-xs font-bold hover:bg-slate-50 transition">
+                    إلغاء
+                </button>
+                <button onclick="confirmAndOpenStudentModal()" class="px-5 py-2 rounded-xl bg-wathaq-darkTeal text-white text-xs font-bold shadow hover:bg-wathaq-teal transition">
+                    نعم، أنا هي
+                </button>
+            </div>
+        </div>
+    </div>
+
 </body>
 </html>
