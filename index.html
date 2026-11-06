@@ -102,7 +102,7 @@
         <section class="bg-gradient-to-r from-amber-500/10 via-wathaq-goldLight to-amber-500/10 border-2 border-wathaq-gold/40 rounded-3xl p-6 wathaq-shadow text-center relative overflow-hidden">
             <div class="flex items-center justify-center gap-2 mb-4">
                 <i class="fa-solid fa-trophy text-2xl text-wathaq-gold"></i>
-                <h2 class="text-2xl font-bold font-serif-title text-wathaq-darkTeal">لوحة الشرف</h2>
+                <h2 class="text-2xl font-bold font-serif-title text-wathaq-darkTeal">بطلات اليوم</h2>
             </div>
             
             <div id="honorRollGrid" class="grid grid-cols-1 sm:grid-cols-3 gap-4 max-w-4xl mx-auto">
@@ -182,11 +182,12 @@
         <!-- Filter & Search Controls -->
         <div class="flex flex-col sm:flex-row items-center justify-between gap-4 bg-white border border-wathaq-cardBorder p-4 rounded-2xl wathaq-shadow">
             <!-- Instant Search Input -->
-            <div class="relative w-full sm:w-96">
+            <div class="relative w-full">
                 <i class="fa-solid fa-magnifying-glass absolute right-4 top-1/2 -translate-y-1/2 text-slate-400"></i>
                 <input type="text" id="searchInput" oninput="filterStudents()" placeholder="ابحثي عن اسم الطالبة..." 
                     class="w-full pr-11 pl-4 py-2.5 rounded-xl border border-slate-200 bg-slate-50 text-wathaq-darkTeal placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-wathaq-darkTeal focus:bg-white text-sm transition">
             </div>
+        </div>
 
         <!-- Students Grid -->
         <div id="studentsGrid" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-5">
@@ -274,7 +275,7 @@
             "إسراء للأقصى", "سليمة نور", "منة الله حسين", "أسماء رُكابي", "حفصة سعدودي",
             "كاميليا ديداني", "رميساء عبده", "أمينة شمارخة", "هاجر شادي", "مرام قنديل",
             "فاطمة الزهراء", "رنيم الحضري", "أسمى السيد", "الشيماء مُتيمن", "ليلى الأمين",
-            "روان عاطف", "رضوى حبيب", "ملك الحسين", "نزيهة عبد الغفور", "صفاء ميلاد",
+            "روان عاطف", "رضوى حبيب", "ملك الحسين", "نزيهة عبد الغفور", "صفاء ميلاد"
         ];
 
         const COURSES = [
@@ -378,10 +379,8 @@
                     'المجلس الثاني',
                     'المجلس الثالث',
                     'المجلس الرابع'
-                    
                 ]
             }
-            
         ];
 
         const TOTAL_ITEMS_COUNT = COURSES.reduce((sum, c) => sum + c.items.length, 0);
@@ -390,7 +389,6 @@
         let activeStudentIndex = null;
         let firebaseRef = null;
 
-        // Embedded Firebase Config
         const FIREBASE_DATABASE_URL = "https://wathaq-platfrom-default-rtdb.firebaseio.com/";
 
         document.addEventListener('DOMContentLoaded', () => {
@@ -640,110 +638,124 @@
         }
 
         function openStudentModal(index) {
-            const name = STUDENT_NAMES[index];
-            const confirmOpen = confirm(`هل أنتِ متأكدة من فتح بطاقة الطالبة: (${name}) لتعديل أهدافها ومقرراتها؟`);
-            if (!confirmOpen) return;
-
             activeStudentIndex = index;
-            const percent = calculateStudentProgress(index);
-            const tree = getTreeStage(percent);
+            const name = STUDENT_NAMES[index];
             const student = appData[index] || { progress: {}, weeklyGoal: "", weeklyDone: false };
 
             document.getElementById('modalStudentName').innerText = name;
-            document.getElementById('modalPercent').innerText = `${percent}%`;
+            
+            const percent = calculateStudentProgress(index);
+            const tree = getTreeStage(percent);
+            
             document.getElementById('modalTreeIcon').innerText = tree.icon;
             document.getElementById('modalTreeStageText').innerText = tree.label;
+            document.getElementById('modalPercent').innerText = `${percent}%`;
 
-            document.getElementById('modalWeeklyGoalInput').value = student.weeklyGoal || "";
-            document.getElementById('modalWeeklyDoneCheckbox').checked = !!student.weeklyDone;
-            document.getElementById('weeklyStatusText').innerText = student.weeklyDone ? "تم الأداء" : "لم يتم";
+            const goalInput = document.getElementById('modalWeeklyGoalInput');
+            goalInput.value = student.weeklyGoal || "";
+
+            const checkbox = document.getElementById('modalWeeklyDoneCheckbox');
+            checkbox.checked = !!student.weeklyDone;
+            
+            const statusText = document.getElementById('weeklyStatusText');
+            statusText.innerText = student.weeklyDone ? "أتمت الهدف" : "لم يتم";
+            statusText.className = student.weeklyDone ? "text-xs font-bold text-emerald-700" : "text-xs font-bold text-slate-700";
 
             const container = document.getElementById('modalSyllabusContent');
             container.innerHTML = '';
 
-            const progressMap = student.progress || {};
+            COURSES.forEach(c => {
+                const section = document.createElement('div');
+                section.className = "bg-white border border-slate-200 rounded-2xl p-4 space-y-3 shadow-sm";
+                
+                let html = `
+                    <div class="flex items-center justify-between border-b border-slate-100 pb-2">
+                        <h5 class="font-bold font-serif-title text-wathaq-darkTeal text-sm">${c.title}</h5>
+                        <span class="text-[10px] font-bold bg-slate-100 text-slate-600 px-2 py-0.5 rounded-md">${c.type}</span>
+                    </div>
+                    <div class="space-y-2">
+                `;
 
-            COURSES.forEach(course => {
-                const courseBox = document.createElement('div');
-                courseBox.className = 'bg-white border border-slate-200 rounded-2xl p-4 space-y-3 shadow-sm';
+                c.items.forEach((itemText, itemIdx) => {
+                    const key = `${c.id}_${itemIdx}`;
+                    const isChecked = !!(student.progress && student.progress[key]);
 
-                let itemsHTML = '';
-                course.items.forEach((itemText, itemIdx) => {
-                    const key = `${course.id}_${itemIdx}`;
-                    const isChecked = !!progressMap[key];
-
-                    itemsHTML += `
-                        <label class="flex items-start gap-3 p-2.5 rounded-xl bg-slate-50 hover:bg-slate-100 border border-slate-200/70 transition cursor-pointer">
-                            <input type="checkbox" 
-                                ${isChecked ? 'checked' : ''} 
-                                onchange="toggleItemCheck(${index}, '${key}', this.checked)"
-                                class="mt-1 w-4 h-4 text-wathaq-darkTeal bg-white border-slate-300 rounded focus:ring-wathaq-darkTeal cursor-pointer">
-                            <span class="text-xs sm:text-sm text-slate-800 font-semibold ${isChecked ? 'line-through text-slate-400' : ''}">
-                                ${itemText}
-                            </span>
+                    html += `
+                        <label class="flex items-center gap-3 p-2 rounded-xl hover:bg-slate-50 cursor-pointer transition border border-transparent hover:border-slate-100">
+                            <input type="checkbox" ${isChecked ? 'checked' : ''} onchange="toggleCourseItem('${c.id}', ${itemIdx}, this.checked)" class="w-4 h-4 text-wathaq-darkTeal rounded focus:ring-wathaq-darkTeal cursor-pointer">
+                            <span class="text-xs sm:text-sm text-slate-700 ${isChecked ? 'line-through text-slate-400 font-medium' : ''}">${itemText}</span>
                         </label>
                     `;
                 });
 
-                courseBox.innerHTML = `
-                    <div class="flex items-center justify-between border-b border-slate-100 pb-2">
-                        <h4 class="font-bold text-wathaq-darkTeal text-sm font-serif-title">${course.title}</h4>
-                        <span class="text-[10px] bg-slate-100 px-2 py-0.5 rounded text-slate-600 font-bold border border-slate-200">${course.type}</span>
-                    </div>
-                    <div class="space-y-1.5 pt-1">
-                        ${itemsHTML}
-                    </div>
-                `;
-
-                container.appendChild(courseBox);
+                html += `</div>`;
+                section.innerHTML = html;
+                container.appendChild(section);
             });
 
             document.getElementById('studentModal').classList.remove('hidden');
         }
 
-        function toggleWeeklyGoalStatus(isDone) {
+        function closeModal() {
+            document.getElementById('studentModal').classList.add('hidden');
+            activeStudentIndex = null;
+        }
+
+        function toggleCourseItem(courseId, itemIdx, isChecked) {
             if (activeStudentIndex === null) return;
-            if (!appData[activeStudentIndex]) appData[activeStudentIndex] = {};
-            appData[activeStudentIndex].weeklyDone = isDone;
-            document.getElementById('weeklyStatusText').innerText = isDone ? "تم الأداء" : "لم يتم";
+            if (!appData[activeStudentIndex]) {
+                appData[activeStudentIndex] = { progress: {}, weeklyGoal: "", weeklyDone: false };
+            }
+            if (!appData[activeStudentIndex].progress) {
+                appData[activeStudentIndex].progress = {};
+            }
+
+            const key = `${courseId}_${itemIdx}`;
+            appData[activeStudentIndex].progress[key] = isChecked;
+
             saveData();
+            
+            const percent = calculateStudentProgress(activeStudentIndex);
+            const tree = getTreeStage(percent);
+            document.getElementById('modalTreeIcon').innerText = tree.icon;
+            document.getElementById('modalTreeStageText').innerText = tree.label;
+            document.getElementById('modalPercent').innerText = `${percent}%`;
+
+            showToast("تم تحديث التقدم بنجاح");
         }
 
         function updateWeeklyGoalText(val) {
             if (activeStudentIndex === null) return;
-            if (!appData[activeStudentIndex]) appData[activeStudentIndex] = {};
+            if (!appData[activeStudentIndex]) {
+                appData[activeStudentIndex] = { progress: {}, weeklyGoal: "", weeklyDone: false };
+            }
             appData[activeStudentIndex].weeklyGoal = val;
             saveData();
+            showToast("تم حفظ الهدف الأسبوعي");
         }
 
-        function toggleItemCheck(studentIdx, key, isChecked) {
-            if (!appData[studentIdx]) appData[studentIdx] = {};
-            if (!appData[studentIdx].progress) appData[studentIdx].progress = {};
+        function toggleWeeklyGoalStatus(isChecked) {
+            if (activeStudentIndex === null) return;
+            if (!appData[activeStudentIndex]) {
+                appData[activeStudentIndex] = { progress: {}, weeklyGoal: "", weeklyDone: false };
+            }
+            appData[activeStudentIndex].weeklyDone = isChecked;
             
-            appData[studentIdx].progress[key] = isChecked;
+            const statusText = document.getElementById('weeklyStatusText');
+            statusText.innerText = isChecked ? "أتمت الهدف" : "لم يتم";
+            statusText.className = isChecked ? "text-xs font-bold text-emerald-700" : "text-xs font-bold text-slate-700";
 
             saveData();
-
-            const percent = calculateStudentProgress(studentIdx);
-            const tree = getTreeStage(percent);
-            document.getElementById('modalPercent').innerText = `${percent}%`;
-            document.getElementById('modalTreeIcon').innerText = tree.icon;
-            document.getElementById('modalTreeStageText').innerText = tree.label;
-        }
-
-        function closeModal() {
-            document.getElementById('studentModal').classList.add('hidden');
-            activeStudentIndex = null;
-            showToast('تم حفظ تحديث الإنجاز بنجاح');
+            showToast(isChecked ? "مبروك إتمام الهدف الأسبوعي!" : "تم تحديث حالة الهدف");
         }
 
         function showToast(msg) {
             const toast = document.getElementById('toast');
             document.getElementById('toastMsg').innerText = msg;
-            toast.classList.remove('translate-y-20', 'opacity-0');
+            toast.classList.remove('translate-y-20', 'opacity-0', 'pointer-events-none');
             setTimeout(() => {
-                toast.classList.add('translate-y-20', 'opacity-0');
-            }, 3000);
+                toast.classList.add('translate-y-20', 'opacity-0', 'pointer-events-none');
+            }, 2500);
         }
     </script>
 </body>
